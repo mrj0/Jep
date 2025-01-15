@@ -30,12 +30,12 @@ public class TestPreInitVariables {
         // pyConfig.setIgnoreEnvironmentFlag(1);
         // TODO fix test so no site flag can be tested
         // pyConfig.setNoSiteFlag(1);
-        pyConfig.setNoUserSiteDirectory(1);
+        pyConfig.setUserSiteDirectory(false);
         // verbose prints out too much, when it's on, it's clear it's on
         // pyConfig.setVerboseFlag(1);
-        pyConfig.setOptimizeFlag(1);
-        pyConfig.setDontWriteBytecodeFlag(1);
-        pyConfig.setHashRandomizationFlag(1);
+        pyConfig.setOptimizationLevel(1);
+        pyConfig.setWriteBytecode(false);
+        pyConfig.setUseHashSeed(false);
         MainInterpreter.setInitParams(pyConfig);
         try (Interpreter interp = new SubInterpreter(
                 new JepConfig().addIncludePaths("."))) {
@@ -43,16 +43,18 @@ public class TestPreInitVariables {
             // assert 1 == ((Number)
             // jep.getValue("sys.flags.ignore_environment"))
             // .intValue();
-            assert 0 == ((Number) interp.getValue("sys.flags.no_site")).intValue();
+            assert 0 == ((Number) interp.getValue("sys.flags.no_site"))
+                    .intValue();
             assert 1 == ((Number) interp.getValue("sys.flags.no_user_site"))
                     .intValue();
-            assert 0 == ((Number) interp.getValue("sys.flags.verbose")).intValue();
+            assert 0 == ((Number) interp.getValue("sys.flags.verbose"))
+                    .intValue();
             assert 1 == ((Number) interp.getValue("sys.flags.optimize"))
                     .intValue();
-            assert 1 == ((Number) interp.getValue("sys.flags.dont_write_bytecode"))
-                    .intValue();
-            assert 1 == ((Number) interp.getValue("sys.flags.hash_randomization"))
-                    .intValue();
+            assert 1 == ((Number) interp
+                    .getValue("sys.flags.dont_write_bytecode")).intValue();
+            assert 1 == ((Number) interp
+                    .getValue("sys.flags.hash_randomization")).intValue();
         } catch (Throwable e) {
             e.printStackTrace();
             System.exit(1);

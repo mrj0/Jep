@@ -134,11 +134,11 @@ public final class MainInterpreter implements AutoCloseable {
             }
         }
 
-        if (pyConfig != null) {
-            setInitParams(pyConfig.noSiteFlag, pyConfig.noUserSiteDirectory,
-                    pyConfig.ignoreEnvironmentFlag, pyConfig.verboseFlag,
-                    pyConfig.optimizeFlag, pyConfig.dontWriteBytecodeFlag,
-                    pyConfig.hashRandomizationFlag, pyConfig.pythonHome, pyConfig.programName);
+        if (pyConfig == null) {
+            pyConfig = new PyConfig();
+        }
+        if (sharedModulesArgv != null) {
+            pyConfig.setArgv(sharedModulesArgv);
         }
 
         thread = new Thread("JepMainInterpreter") {
@@ -146,7 +146,12 @@ public final class MainInterpreter implements AutoCloseable {
             @Override
             public void run() {
                 try {
-                    initializePython(sharedModulesArgv);
+                    initializePython(pyConfig.argv, pyConfig.hashSeed,
+                            pyConfig.useHashSeed, pyConfig.home,
+                            pyConfig.optimizationLevel, pyConfig.programName,
+                            pyConfig.siteImport, pyConfig.useEnvironment,
+                            pyConfig.userSiteDirectory, pyConfig.verbose,
+                            pyConfig.writeBytecode);
                 } catch (Throwable t) {
                     error = t;
                 } finally {
@@ -239,7 +244,8 @@ public final class MainInterpreter implements AutoCloseable {
      *             if called after the Python interpreter is initialized
      * @since 3.6
      */
-    public static void setInitParams(PyConfig config) throws IllegalStateException {
+    public static void setInitParams(PyConfig config)
+            throws IllegalStateException {
         if (null != instance) {
             throw new IllegalStateException(
                     "Jep.setInitParams(PyConfig) called after initializing python interpreter.");
@@ -258,7 +264,9 @@ public final class MainInterpreter implements AutoCloseable {
      *             if called after the Python interpreter is initialized
      * 
      * @since 3.7
+     * @deprecated Use {@link PyConfig#setArgv(String...)} instead.
      */
+    @Deprecated
     public static void setSharedModulesArgv(String... argv)
             throws IllegalStateException {
         if (instance != null) {
@@ -282,7 +290,8 @@ public final class MainInterpreter implements AutoCloseable {
      * 
      * @since 3.9
      */
-    public static void setJepLibraryPath(String path) throws IllegalStateException {
+    public static void setJepLibraryPath(String path)
+            throws IllegalStateException {
         if (instance != null) {
             throw new IllegalStateException(
                     "Jep.setJepLibraryPath(...) called after initializing python interpreter.");
@@ -290,12 +299,10 @@ public final class MainInterpreter implements AutoCloseable {
         jepLibraryPath = path;
     }
 
-    private static native void setInitParams(int noSiteFlag,
-            int noUserSiteDiretory, int ignoreEnvironmentFlag, int verboseFlag,
-            int optimizeFlag, int dontWriteBytecodeFlag,
-            int hashRandomizationFlag, String pythonHome, String programName);
-
-    private static native void initializePython(String[] mainInterpreterArgv);
+    private static native void initializePython(String[] argv, int hashSeed,
+            int useHashSeed, String home, int optimizationLevel,
+            String programName, int siteImport, int useEnvironment,
+            int userSiteDirectory, int verbose, int writeBytecode);
 
     private static native void sharedImportInternal(String module)
             throws JepException;

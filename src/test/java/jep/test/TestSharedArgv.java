@@ -6,6 +6,7 @@ import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
 import jep.MainInterpreter;
+import jep.PyConfig;
 import jep.SubInterpreter;
 
 /**
@@ -23,8 +24,7 @@ public class TestSharedArgv {
     public static void main(String[] args) throws JepException {
 
         final String[] argv = new String[] { "", "-h", "other" };
-
-        MainInterpreter.setSharedModulesArgv(argv);
+        MainInterpreter.setInitParams(new PyConfig().setArgv(argv));
         JepConfig cfg = new JepConfig();
         cfg.addSharedModules("logging");
         cfg.addIncludePaths(".");

@@ -34,36 +34,28 @@
 
 /*
  * Class:     jep_MainInterpreter
- * Method:    setInitParams
- * Signature: (IIIIIII)V
- */
-JNIEXPORT void JNICALL Java_jep_MainInterpreter_setInitParams
-(JNIEnv *env,
- jclass class,
- jint noSiteFlag,
- jint noUserSiteDirectory,
- jint ignoreEnvironmentFlag,
- jint verboseFlag,
- jint optimizeFlag,
- jint dontWriteBytecodeFlag,
- jint hashRandomizationFlag,
- jstring pythonHome,
- jstring programName)
-{
-    pyembed_preinit(env, noSiteFlag, noUserSiteDirectory, ignoreEnvironmentFlag,
-                    verboseFlag, optimizeFlag, dontWriteBytecodeFlag,
-                    hashRandomizationFlag, pythonHome, programName);
-}
-
-/*
- * Class:     jep_MainInterpreter
  * Method:    initializePython
- * Signature: ([Ljava/lang/String;)V
+ * Signature: ([Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;IIIII)V
  */
 JNIEXPORT void JNICALL Java_jep_MainInterpreter_initializePython
-(JNIEnv *env, jclass class, jobjectArray argv)
+(JNIEnv *env,
+ jclass class,
+ jobjectArray argv,
+ jint hashSeed,
+ jint useHashSeed,
+ jstring home,
+ jint optimizationLevel,
+ jstring programName,
+ jint siteImport,
+ jint useEnvironment,
+ jint userSiteDirectory,
+ jint verbose,
+ jint writeByteCode
+)
 {
-    pyembed_startup(env, argv);
+    pyembed_startup(env, argv, hashSeed, useHashSeed, home, optimizationLevel,
+                    programName, siteImport, useEnvironment, userSiteDirectory, verbose,
+                    writeByteCode);
 }
 
 /*
