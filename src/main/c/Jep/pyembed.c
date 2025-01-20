@@ -337,6 +337,11 @@ void pyembed_startup(JNIEnv *env,
     PyStatus status = PyStatus_Ok();
     PyConfig config;
     PyConfig_InitPythonConfig(&config);
+    // According to PEP-587 the fields shared with PyPreConfig should be set first.
+    config.parse_argv = 0;
+    if (useEnvironment >= 0) {
+        config.use_environment = useEnvironment;
+    }
 
     if (argv) {
         jsize count = (*env)->GetArrayLength(env, argv);
@@ -364,7 +369,6 @@ void pyembed_startup(JNIEnv *env,
         free(bytesArgv);
         (*env)->PopLocalFrame(env, NULL);
     }
-    config.parse_argv = 0;
     if (hashSeed >= 0) {
         config.hash_seed = hashSeed;
     }
@@ -386,9 +390,6 @@ void pyembed_startup(JNIEnv *env,
     }
     if (siteImport >= 0) {
         config.site_import = siteImport;
-    }
-    if (useEnvironment >= 0) {
-        config.use_environment = useEnvironment;
     }
     if (userSiteDirectory >= 0) {
         config.user_site_directory = userSiteDirectory;

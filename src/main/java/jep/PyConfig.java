@@ -126,7 +126,7 @@ public class PyConfig {
      * standard Python libraries.
      * 
      * @param home
-     *            the directory tpuse for Python home.
+     *            the directory to use for Python home.
      * @return a reference to this PyConfig
      * @see https://docs.python.org/3/c-api/init_config.html#c.PyConfig.home
      */
@@ -256,8 +256,7 @@ public class PyConfig {
      */
     @Deprecated
     public PyConfig setNoSiteFlag(int noSiteFlag) {
-        this.siteImport = (noSiteFlag == 0) ? 1 : 0;
-        return this;
+        return setSiteImport(noSiteFlag == 0);
     }
 
     /**
@@ -272,8 +271,7 @@ public class PyConfig {
      */
     @Deprecated
     public PyConfig setNoUserSiteDirectory(int noUserSiteDirectory) {
-        this.userSiteDirectory = (noUserSiteDirectory == 0) ? 1 : 0;
-        return this;
+        return this.setUserSiteDirectory(noUserSiteDirectory == 0);
     }
 
     /**
@@ -288,8 +286,7 @@ public class PyConfig {
      */
     @Deprecated
     public PyConfig setIgnoreEnvironmentFlag(int ignoreEnvironmentFlag) {
-        this.useEnvironment = (ignoreEnvironmentFlag == 0) ? 1 : 0;
-        return this;
+        return this.setUseEnvironment(ignoreEnvironmentFlag == 0);
     }
 
     /**
@@ -304,8 +301,7 @@ public class PyConfig {
      */
     @Deprecated
     public PyConfig setVerboseFlag(int verboseFlag) {
-        this.verbose = verboseFlag;
-        return this;
+        return this.setVerbose(verboseFlag);
     }
 
     /**
@@ -320,8 +316,7 @@ public class PyConfig {
      */
     @Deprecated
     public PyConfig setOptimizeFlag(int optimizeFlag) {
-        this.optimizationLevel = optimizeFlag;
-        return this;
+        return this.setOptimizationLevel(optimizeFlag);
     }
 
     /**
@@ -336,8 +331,7 @@ public class PyConfig {
      */
     @Deprecated
     public PyConfig setDontWriteBytecodeFlag(int dontWriteBytecodeFlag) {
-        this.writeBytecode = (dontWriteBytecodeFlag == 0) ? 1 : 0;
-        return this;
+        return this.setWriteBytecode(dontWriteBytecodeFlag == 0);
     }
 
     /**
@@ -352,11 +346,11 @@ public class PyConfig {
      */
     @Deprecated
     public PyConfig setHashRandomizationFlag(int hashRandomizationFlag) {
-        if (hashRandomizationFlag == 0) {
-            this.useHashSeed = 0;
+        if (hashRandomizationFlag == 1) {
+            this.setUseHashSeed(false);
         } else {
-            this.hashSeed = hashRandomizationFlag;
-            this.useHashSeed = 1;
+            this.setHashSeed(hashRandomizationFlag);
+            this.setUseHashSeed(true);
         }
         return this;
     }
@@ -373,8 +367,7 @@ public class PyConfig {
      */
     @Deprecated
     public PyConfig setPythonHome(String pythonHome) {
-        this.home = pythonHome;
-        return this;
+        return this.setHome(pythonHome);
     }
 
     @Override
