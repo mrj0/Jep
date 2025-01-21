@@ -1,11 +1,10 @@
 package jep.test;
 
 import jep.Interpreter;
-import jep.JepConfig;
 import jep.JepException;
 import jep.MainInterpreter;
 import jep.PyConfig;
-import jep.SubInterpreter;
+import jep.SharedInterpreter;
 
 /**
  * A test class for verifying that Jep can correctly configure the global Python
@@ -37,8 +36,7 @@ public class TestPreInitVariables {
         pyConfig.setWriteBytecode(false);
         pyConfig.setUseHashSeed(false);
         MainInterpreter.setInitParams(pyConfig);
-        try (Interpreter interp = new SubInterpreter(
-                new JepConfig().addIncludePaths("."))) {
+        try (Interpreter interp = new SharedInterpreter()) {
             interp.eval("import sys");
             // assert 1 == ((Number)
             // jep.getValue("sys.flags.ignore_environment"))
