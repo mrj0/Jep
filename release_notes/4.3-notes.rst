@@ -2,3 +2,11 @@ Jep 4.3 Release Notes
 *********************
 This release drops support for versions of Python older than 3.10.
 
+Updates to PyConfig
+*******************
+`PyConfig <https://ninia.github.io/jep/javadoc/4.3/jep/PyConfig.html>`_ has
+been updated so that the API maps directly to the PyConfig structure in the
+Python C API which was introduced with
+`PEP 587 <https://peps.python.org/pep-0587/>`_. Most of the existing methods
+are now deprecated. The deprecated methods will continue to work as they did
+before for now but they will be removed in a future release.
