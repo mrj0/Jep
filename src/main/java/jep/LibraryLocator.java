@@ -63,12 +63,10 @@ final class LibraryLocator {
     private LibraryLocator(PyConfig pyConfig) {
         String pythonHome;
         if (pyConfig != null) {
-            ignoreEnv = pyConfig.ignoreEnvironmentFlag != 0
-                    && pyConfig.ignoreEnvironmentFlag != -1;
-            noSite = pyConfig.noSiteFlag != 0 && pyConfig.noSiteFlag != -1;
-            noUserSite = pyConfig.noUserSiteDirectory != 0
-                    && pyConfig.noUserSiteDirectory != -1;
-            pythonHome = pyConfig.pythonHome;
+            ignoreEnv = pyConfig.useEnvironment == 0;
+            noSite = pyConfig.siteImport == 0;
+            noUserSite = pyConfig.userSiteDirectory == 0;
+            pythonHome = pyConfig.home;
         } else {
             ignoreEnv = false;
             noSite = false;
@@ -140,8 +138,8 @@ final class LibraryLocator {
                     return true;
                 }
                 for (File pythonDir : libDir.listFiles()) {
-                    if (pythonDir.isDirectory()
-                            && pythonDir.getName().matches("python\\d\\.\\d{1,2}")) {
+                    if (pythonDir.isDirectory() && pythonDir.getName()
+                            .matches("python\\d\\.\\d{1,2}")) {
                         packagesDir = new File(pythonDir, "site-packages");
                         if (searchPackageDir(packagesDir)) {
                             return true;
@@ -186,8 +184,8 @@ final class LibraryLocator {
             File libDir = new File(localDir, "lib");
             if (libDir.isDirectory()) {
                 for (File pythonDir : libDir.listFiles()) {
-                    if (pythonDir.isDirectory()
-                            && pythonDir.getName().matches("python\\d\\.\\d{1,2}")) {
+                    if (pythonDir.isDirectory() && pythonDir.getName()
+                            .matches("python\\d\\.\\d{1,2}")) {
                         File packagesDir = new File(pythonDir, "site-packages");
                         if (searchPackageDir(packagesDir)) {
                             return true;
@@ -197,7 +195,7 @@ final class LibraryLocator {
             }
 
         }
-        
+
         // For Mac framework builds
         if (userHome != null) {
             File localDir = new File(userHome, "Library");
@@ -205,12 +203,14 @@ final class LibraryLocator {
                 File pythonMainDir = new File(localDir, "Python");
                 if (pythonMainDir.isDirectory()) {
                     for (File versionDir : pythonMainDir.listFiles()) {
-                        if (versionDir.isDirectory() && versionDir.getName().matches("\\d\\.\\d{1,2}")) {
+                        if (versionDir.isDirectory() && versionDir.getName()
+                                .matches("\\d\\.\\d{1,2}")) {
                             File libDir = new File(versionDir, "lib");
                             if (libDir.isDirectory()) {
                                 File pythonDir = new File(libDir, "python");
                                 if (pythonDir.isDirectory()) {
-                                    File packagesDir = new File(pythonDir, "site-packages");
+                                    File packagesDir = new File(pythonDir,
+                                            "site-packages");
                                     if (searchPackageDir(packagesDir)) {
                                         return true;
                                     }
@@ -222,7 +222,7 @@ final class LibraryLocator {
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -243,9 +243,11 @@ final class LibraryLocator {
                         System.load(libraryFile.getAbsolutePath());
                     } catch (UnsatisfiedLinkError e) {
                         /*
-                         * This is almost always caused because libpython or pythonXX.dll isn't
-                         * found, so try to figure out the exact libpython that
-                         * is needed and look in PYTHONHOME. Otherwise look in PYTHONHOME for pythonXX.dll
+                         * This is almost always caused because libpython or
+                         * pythonXX.dll isn't found, so try to figure out the
+                         * exact libpython that is needed and look in
+                         * PYTHONHOME. Otherwise look in PYTHONHOME for
+                         * pythonXX.dll
                          * 
                          */
                         Matcher m = Pattern.compile("libpython[\\w\\.]*")

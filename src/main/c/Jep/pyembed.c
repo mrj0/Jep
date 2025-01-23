@@ -231,56 +231,6 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
     return 0;
 }
 
-void pyembed_preinit(JNIEnv *env,
-                     jint noSiteFlag,
-                     jint noUserSiteDirectory,
-                     jint ignoreEnvironmentFlag,
-                     jint verboseFlag,
-                     jint optimizeFlag,
-                     jint dontWriteBytecodeFlag,
-                     jint hashRandomizationFlag,
-                     jstring pythonHome,
-                     jstring programName)
-{
-    if (noSiteFlag >= 0) {
-        Py_NoSiteFlag = noSiteFlag;
-    }
-    if (noUserSiteDirectory >= 0) {
-        Py_NoUserSiteDirectory = noUserSiteDirectory;
-    }
-    if (ignoreEnvironmentFlag >= 0) {
-        Py_IgnoreEnvironmentFlag = ignoreEnvironmentFlag;
-    }
-    if (verboseFlag >= 0) {
-        Py_VerboseFlag = verboseFlag;
-    }
-    if (optimizeFlag >= 0) {
-        Py_OptimizeFlag = optimizeFlag;
-    }
-    if (dontWriteBytecodeFlag >= 0) {
-        Py_DontWriteBytecodeFlag = dontWriteBytecodeFlag;
-    }
-    if (hashRandomizationFlag >= 0) {
-        Py_HashRandomizationFlag = hashRandomizationFlag;
-    }
-    if (pythonHome) {
-        const char* homeAsUTF = (*env)->GetStringUTFChars(env, pythonHome, NULL);
-        wchar_t* homeForPython = Py_DecodeLocale(homeAsUTF, NULL);
-        (*env)->ReleaseStringUTFChars(env, pythonHome, homeAsUTF);
-        Py_SetPythonHome(homeForPython);
-        // Python documentation says that the string should not be changed for
-        // the duration of the program so it can never be freed.
-    }
-    if (programName) {
-        const char* nameAsUTF = (*env)->GetStringUTFChars(env, programName, NULL);
-        wchar_t* nameForPython = Py_DecodeLocale(nameAsUTF, NULL);
-        (*env)->ReleaseStringUTFChars(env, programName, nameAsUTF);
-        Py_SetProgramName(nameForPython);
-        // Python documentation says that the string should not be changed for
-        // the duration of the program so it can never be freed.
-    }
-}
-
 /*
  * MSVC requires tp_base to be set at runtime instead of in the type
  * declaration. :/  Otherwise we could just set tp_base in the type declaration
@@ -316,7 +266,19 @@ static void handle_startup_exception(JNIEnv *env, const char* excMsg)
 }
 
 
-void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
+void pyembed_startup(JNIEnv *env,
+                     jobjectArray argv,
+                     jint hashSeed,
+                     jint useHashSeed,
+                     jstring home,
+                     jint optimizationLevel,
+                     jstring programName,
+                     jint siteImport,
+                     jint useEnvironment,
+                     jint userSiteDirectory,
+                     jint verbose,
+                     jint writeByteCode
+                    )
 {
     PyObject* sysModule       = NULL;
     PyObject* threadingModule = NULL;
@@ -372,7 +334,85 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
         return;
     }
 
-    Py_Initialize();
+    PyStatus status = PyStatus_Ok();
+    PyConfig config;
+    PyConfig_InitPythonConfig(&config);
+    // According to PEP-587 the fields shared with PyPreConfig should be set first.
+    config.parse_argv = 0;
+    if (useEnvironment >= 0) {
+        config.use_environment = useEnvironment;
+    }
+
+    if (argv) {
+        jsize count = (*env)->GetArrayLength(env, argv);
+        (*env)->PushLocalFrame(env, count * 2);
+        char** bytesArgv = (char**) malloc(count * sizeof(char**));
+        int i = 0;
+        for (i = 0; i < count; i++) {
+            jstring jarg = (*env)->GetObjectArrayElement(env, argv, i);
+            if (jarg == NULL) {
+                status = PyStatus_Error("Received null argv.");
+            } else {
+                char* arg = (char*) (*env)->GetStringUTFChars(env, jarg, NULL);
+                bytesArgv[i] = arg;
+            }
+        }
+        if (!PyStatus_Exception(status)) {
+            status = PyConfig_SetBytesArgv(&config, count, bytesArgv);
+        }
+        for (i = 0; i < count; i++) {
+            jstring jarg = (*env)->GetObjectArrayElement(env, argv, i);
+            if (jarg != NULL) {
+                (*env)->ReleaseStringUTFChars(env, jarg, bytesArgv[i]);
+            }
+        }
+        free(bytesArgv);
+        (*env)->PopLocalFrame(env, NULL);
+    }
+    if (hashSeed >= 0) {
+        config.hash_seed = hashSeed;
+    }
+    if (useHashSeed >= 0) {
+        config.use_hash_seed = useHashSeed;
+    }
+    if (!PyStatus_Exception(status) && home) {
+        const char* homeAsUTF = (*env)->GetStringUTFChars(env, home, NULL);
+        status = PyConfig_SetBytesString(&config, &config.home, homeAsUTF);
+        (*env)->ReleaseStringUTFChars(env, home, homeAsUTF);
+    }
+    if (optimizationLevel >= 0) {
+        config.optimization_level = optimizationLevel;
+    }
+    if (!PyStatus_Exception(status) && programName) {
+        const char* nameAsUTF = (*env)->GetStringUTFChars(env, programName, NULL);
+        status = PyConfig_SetBytesString(&config, &config.program_name, nameAsUTF);
+        (*env)->ReleaseStringUTFChars(env, programName, nameAsUTF);
+    }
+    if (siteImport >= 0) {
+        config.site_import = siteImport;
+    }
+    if (userSiteDirectory >= 0) {
+        config.user_site_directory = userSiteDirectory;
+    }
+    if (verbose >= 0) {
+        config.verbose = verbose;
+    }
+    if (writeByteCode >= 0) {
+        config.write_bytecode = writeByteCode;
+    }
+
+    if (!PyStatus_Exception(status)) {
+        status = Py_InitializeFromConfig(&config);
+    }
+    PyConfig_Clear(&config);
+    if (PyStatus_Exception(status)) {
+        jclass excClass = (*env)->FindClass(env, "java/lang/IllegalStateException");
+        if (excClass != NULL) {
+            (*env)->ThrowNew(env, excClass, status.err_msg);
+        }
+        // The exit code is ignored, because exiting seems rude.
+        return;
+    }
 
     if (pyjtypes_ready()) {
         handle_startup_exception(env, "Failed to initialize PyJTypes");
@@ -417,50 +457,6 @@ void pyembed_startup(JNIEnv *env, jobjectArray sharedModulesArgv)
 
     // save a pointer to the main PyThreadState object
     mainThreadState = PyThreadState_Get();
-
-    /*
-     * Workaround for shared modules sys.argv.  Set sys.argv on the main thread.
-     * See github issue #81.
-     */
-    if (sharedModulesArgv != NULL) {
-        wchar_t **argv = NULL;
-        jsize count = 0;
-        int i       = 0;
-
-        count = (*env)->GetArrayLength(env, sharedModulesArgv);
-        (*env)->PushLocalFrame(env, count * 2);
-        argv = (wchar_t**) malloc(count * sizeof(wchar_t*));
-        for (i = 0; i < count; i++) {
-            char* arg     = NULL;
-            wchar_t* argt = NULL;
-            int k = 0;
-            jstring jarg = (*env)->GetObjectArrayElement(env, sharedModulesArgv, i);
-            if (jarg == NULL) {
-                PyEval_ReleaseThread(mainThreadState);
-                (*env)->PopLocalFrame(env, NULL);
-                THROW_JEP(env, "Received null argv.");
-                for (k = 0; k < i; k++) {
-                    free(argv[k]);
-                }
-                free(argv);
-                return;
-            }
-            arg = (char*) (*env)->GetStringUTFChars(env, jarg, NULL);
-            argt = malloc((strlen(arg) + 1) * sizeof(wchar_t));
-            mbstowcs(argt, arg, strlen(arg) + 1);
-            (*env)->ReleaseStringUTFChars(env, jarg, arg);
-            argv[i] = argt;
-        }
-
-        PySys_SetArgvEx(count, argv, 0);
-
-        // free memory
-        for (i = 0; i < count; i++) {
-            free(argv[i]);
-        }
-        free(argv);
-        (*env)->PopLocalFrame(env, NULL);
-    }
 
     PyEval_ReleaseThread(mainThreadState);
 }
@@ -1325,14 +1321,6 @@ void pyembed_run(JNIEnv *env,
                 THROW_JEP(env, "pyembed_run: Can't reopen .pyc file");
                 goto EXIT;
             }
-
-            /* Turn on optimization if a .pyo file is given */
-            if (strcmp(ext, ".pyo") == 0) {
-                Py_OptimizeFlag = 2;
-            } else {
-                Py_OptimizeFlag = 0;
-            }
-
             pyembed_run_pyc(jepThread, script);
         } else {
             PyRun_File(script,

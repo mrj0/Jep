@@ -6,6 +6,7 @@ import jep.Interpreter;
 import jep.JepConfig;
 import jep.JepException;
 import jep.MainInterpreter;
+import jep.PyConfig;
 import jep.SubInterpreter;
 
 /**
@@ -23,8 +24,7 @@ public class TestSharedArgv {
     public static void main(String[] args) throws JepException {
 
         final String[] argv = new String[] { "", "-h", "other" };
-
-        MainInterpreter.setSharedModulesArgv(argv);
+        MainInterpreter.setInitParams(new PyConfig().setArgv(argv));
         JepConfig cfg = new JepConfig();
         cfg.addSharedModules("logging");
         cfg.addIncludePaths(".");
@@ -38,6 +38,9 @@ public class TestSharedArgv {
             interp.eval("import logging");
             List<String> result = (List<String>) interp
                     .getValue("logging.sys.argv");
+            if (argv.length != result.size()) {
+                throw new RuntimeException("len(argv) did not match");
+            }
             for (int i = 0; i < result.size(); i++) {
                 if (!result.get(i).equals(argv[i])) {
                     throw new RuntimeException("argv[" + i + "] did not match");

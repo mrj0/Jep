@@ -33,9 +33,9 @@ import java.util.Set;
 /**
  * <p>
  * A configuration object for constructing a Jep instance, corresponding to the
- * configuration of the particular Python sub-interpreter. This class is
- * intended to make constructing Jep instances easier while maintaining
- * compatible APIs between releases.
+ * configuration of the particular Python interpreter. This class is intended to
+ * make constructing Jep instances easier while maintaining compatible APIs
+ * between releases.
  * </p>
  * 
  * @author Nate Jensen
@@ -58,7 +58,8 @@ public class JepConfig {
 
     protected Set<String> sharedModules = null;
 
-    protected SubInterpreterOptions subInterpOptions = SubInterpreterOptions.legacy();
+    protected SubInterpreterOptions subInterpOptions = SubInterpreterOptions
+            .legacy();
 
     /**
      * Sets a path of directories separated by File.pathSeparator that will be
@@ -195,10 +196,10 @@ public class JepConfig {
     }
 
     /**
-     * Set the configuration options for a sub-interpreter. These options
-     * are only used in Python version 3.12 or later, when using earlier versions
-     * of Python these options are ignored. These options are only used for SubInterpreter
-     * and should not be set when configuring SharedInterpreter.
+     * Set the configuration options for a sub-interpreter. These options are
+     * only used in Python version 3.12 or later, when using earlier versions of
+     * Python these options are ignored. These options are only used for
+     * SubInterpreter and should not be set when configuring SharedInterpreter.
      *
      * @param subInterpOptions
      *            the sub-interpreter options
@@ -206,7 +207,8 @@ public class JepConfig {
      * 
      * @since 4.2
      */
-    public JepConfig setSubInterpreterOptions(SubInterpreterOptions subInterpOptions) {
+    public JepConfig setSubInterpreterOptions(
+            SubInterpreterOptions subInterpOptions) {
         this.subInterpOptions = subInterpOptions;
         return this;
     }
