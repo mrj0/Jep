@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta:__legacy__"
 name = "jep"
 description = "Jep embeds CPython in Java through JNI."
 dynamic = ["version"]
-#version = "4.3.0"
 license = { "text" = "zlib/libpng"}
 readme = "README.rst"
 requires-python = ">= 3.10"
