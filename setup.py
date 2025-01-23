@@ -81,31 +81,10 @@ if __name__ == '__main__':
         #Disable warnings about Secure CRT Functions in util.c and pyembed.c.
         defines.append(('_CRT_SECURE_NO_WARNINGS', 1))
 
-    setup(name='jep',
-          version=VERSION,
-          description='Jep embeds CPython in Java',
-          long_description=read_file('README.rst'),
-          author='Jep Developers',
-          author_email='jep-project@googlegroups.com',
-          url='https://github.com/ninia/jep',
+    setup(version=VERSION,
           packages=['jep'],
           package_dir={'': 'src/main/python'},
           scripts=['src/main/scripts/jep'],
-          keywords='java',
-          license='zlib/libpng',
-          classifiers=[
-                       'License :: OSI Approved :: zlib/libpng License',
-                       'Development Status :: 5 - Production/Stable',
-                       'Intended Audience :: Developers',
-                       'Topic :: Software Development',
-                       'Programming Language :: Java',
-                       'Programming Language :: Python',
-                       'Programming Language :: Python :: 3.10',
-                       'Programming Language :: Python :: 3.11',
-                       'Programming Language :: Python :: 3.12',
-                       'Programming Language :: Python :: 3.13',
-                       'Programming Language :: Python :: Implementation :: CPython',
-                      ],
           ext_modules=[
               Extension(
                   name='jep',

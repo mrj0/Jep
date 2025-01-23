@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta:__legacy__"
+
+[project]
+name = "jep"
+description = "Jep embeds CPython in Java through JNI."
+dynamic = ["version"]
+#version = "4.3.0"
+license = { "text" = "zlib/libpng"}
+readme = "README.rst"
+requires-python = ">= 3.10"
+authors = [
+  {name = "Mike Johnson", email = "mike@mrj0.com"}
+]
+maintainers = [
+  {name = "Nate Jensen", email = "ndjensen@gmail.com"},
+  {name = "Ben Steffensmeier", email = "ben.steffensmeier@gmail.com"}
+]
+classifiers = [
+  "License :: OSI Approved :: zlib/libpng License",
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development",
+  "Topic :: Software Development :: Libraries :: Java Libraries",
+  "Programming Language :: Java",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation :: CPython"
+]
+keywords = ["java"]
+
+[project.urls]
+Homepage = "https://github.com/ninia/jep"
+Documentation = "https://github.com/ninia/jep/wiki"
+JavaDoc = "https://ninia.github.io/jep/javadoc"
+Repository = "https://github.com/ninia/jep.git"
+Issues = "https://github.com/ninia/jep.issues"
+
+[project.optional-dependencies]
+numpy = ["numpy >= 1.7"]
