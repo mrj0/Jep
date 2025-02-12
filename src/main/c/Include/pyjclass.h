@@ -36,7 +36,7 @@
 #ifndef _Included_pyjclass
 #define _Included_pyjclass
 
-extern PyTypeObject PyJClass_Type;
+extern PyType_Spec PyJClass_Spec;
 
 typedef struct {
     PyObject_HEAD
@@ -52,8 +52,6 @@ typedef struct {
 
 PyObject* PyJClass_Wrap(JNIEnv*, jobject);
 
-#define PyJClass_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJClass_Type)
-
+int PyJClass_Check(PyObject*);
 
 #endif // ndef pyjclass

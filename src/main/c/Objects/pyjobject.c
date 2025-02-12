@@ -33,6 +33,16 @@
  */
 #include "structmember.h"
 
+int PyJObject_Check(PyObject *pyobj)
+{
+    JepModuleState* modState = pyembed_get_module_state();
+    if (modState) {
+        return PyObject_TypeCheck(pyobj, modState->PyJObject_Type);
+    }
+    return 0;
+}
+
+
 PyObject* PyJObject_New(JNIEnv *env, PyTypeObject* type, jobject obj,
                         jclass class)
 {
@@ -96,7 +106,7 @@ static PyObject* pyjobject_richcompare(PyJObject *self,
 {
     JNIEnv *env;
 
-    if (PyType_IsSubtype(Py_TYPE(_other), &PyJObject_Type)) {
+    if (PyJObject_Check(_other)) {
         PyJObject *other = (PyJObject *) _other;
         jboolean eq;
 
@@ -286,44 +296,20 @@ static PyGetSetDef pyjobject_getset[] = {
     {NULL} /* Sentinel */
 };
 
-PyTypeObject PyJObject_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "java.lang.Object",                       /* tp_name */
-    sizeof(PyJObject),                        /* tp_basicsize */
-    0,                                        /* tp_itemsize */
-    (destructor) pyjobject_dealloc,           /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    (hashfunc) pyjobject_hash,                /* tp_hash  */
-    0,                                        /* tp_call */
-    (reprfunc) pyjobject_str,                 /* tp_str */
-    0,                                        /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_BASETYPE,                      /* tp_flags */
-    "Jep java.lang.Object",                   /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    (richcmpfunc) pyjobject_richcompare,      /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    pyjobject_methods,                        /* tp_methods */
-    0,                                        /* tp_members */
-    pyjobject_getset,                         /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
+static PyType_Slot slots[] = {
+    {Py_tp_doc, "Jep java.lang.Object"},
+    {Py_tp_dealloc, pyjobject_dealloc},
+    {Py_tp_hash, pyjobject_hash},
+    {Py_tp_str, pyjobject_str},
+    {Py_tp_richcompare, pyjobject_richcompare},
+    {Py_tp_methods, pyjobject_methods},
+    {Py_tp_getset, pyjobject_getset},
+    {0, NULL},
+};
+
+PyType_Spec PyJObject_Spec = {
+    .name = "java.lang.Object",
+    .basicsize = sizeof(PyJObject),
+    .flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .slots = slots
 };

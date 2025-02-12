@@ -33,6 +33,15 @@
  */
 #include "structmember.h"
 
+int PyJClass_Check(PyObject *pyobj)
+{
+    JepModuleState* modState = pyembed_get_module_state();
+    if (modState) {
+        return PyObject_TypeCheck(pyobj, modState->PyJClass_Type);
+    }
+    return 0;
+}
+
 /*
  * Adds a single inner class as attributes to the pyjclass. This will check if
  * the inner class is public and will only add it if it is public. This is
@@ -211,7 +220,11 @@ static int pyjclass_init(JNIEnv *env, PyObject *pyobj)
 
 PyObject* PyJClass_Wrap(JNIEnv *env, jobject obj)
 {
-    PyObject* pyjob = PyJObject_New(env, &PyJClass_Type, NULL, obj);
+    JepModuleState* modState = pyembed_get_module_state();
+    if (!modState) {
+        return NULL;
+    }
+    PyObject* pyjob = PyJObject_New(env, modState->PyJClass_Type, NULL, obj);
     if (pyjob) {
         if (!pyjclass_init(env, pyjob)) {
             Py_DecRef(pyjob);
@@ -226,7 +239,7 @@ static void pyjclass_dealloc(PyJClassObject *self)
 #if USE_DEALLOC
     Py_CLEAR(self->constructor);
     Py_CLEAR(self->attr);
-    PyJClass_Type.tp_base->tp_dealloc((PyObject*) self);
+    Py_TYPE(self)->tp_base->tp_dealloc((PyObject*) self);
 #endif
 }
 
@@ -449,6 +462,8 @@ PyMethodDef pyjclass_methods[] = {
 
 
 static PyMemberDef pyjclass_members[] = {
+    /* TODO Consider moving to managed dict as described in the documentation for tp_dictoffset */
+    {"__dictoffset__", T_PYSSIZET, offsetof(PyJClassObject, attr), READONLY},
     {"__dict__", T_OBJECT, offsetof(PyJClassObject, attr), READONLY},
     {0}
 };
@@ -458,43 +473,21 @@ static PyGetSetDef pyjclass_getset[] = {
     {NULL} /* Sentinel */
 };
 
-PyTypeObject PyJClass_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "jep.PyJClass",
-    sizeof(PyJClassObject),
-    0,
-    (destructor) pyjclass_dealloc,            /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash  */
-    (ternaryfunc) pyjclass_call,              /* tp_call */
-    0,                                        /* tp_str */
-    pyjclass_getattro,                        /* tp_getattro */
-    pyjclass_setattro,                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    "jclass",                                 /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    pyjclass_methods,                         /* tp_methods */
-    pyjclass_members,                         /* tp_members */
-    pyjclass_getset,                          /* tp_getset */
-    0, // &PyJObject_Type                     /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    offsetof(PyJClassObject, attr),           /* tp_dictoffset */
-    0,                                        /* tp_init */
-    0,                                        /* tp_alloc */
-    NULL,                                     /* tp_new */
+static PyType_Slot slots[] = {
+    {Py_tp_doc, "Jep java.lang.Class"},
+    {Py_tp_dealloc, pyjclass_dealloc},
+    {Py_tp_call, pyjclass_call},
+    {Py_tp_getattro, pyjclass_getattro},
+    {Py_tp_setattro, pyjclass_setattro},
+    {Py_tp_methods, pyjclass_methods},
+    {Py_tp_members, pyjclass_members},
+    {Py_tp_getset, pyjclass_getset},
+    {0, NULL},
+};
+
+PyType_Spec PyJClass_Spec = {
+    .name = "java.lang.Class",
+    .basicsize = sizeof(PyJClassObject),
+    .flags = Py_TPFLAGS_DEFAULT,
+    .slots = slots
 };

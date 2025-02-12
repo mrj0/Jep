@@ -32,12 +32,6 @@ static PyTypeObject PyJType_Type;
 static PyTypeObject* pyjtype_get_cached(JNIEnv*, PyObject*, jclass);
 static int addMethods(JNIEnv*, PyObject*, jclass);
 
-/*
-* Flag to indicate if methods have been added to static types. Most types are
-* reinitialized for each interpreter but static types are shared between
-* interpreters and must be initialized only once.
-*/
-static int staticTypesInitialized = 0;
 
 /*
  * Populate pyjmethods for a type and add it to the cache. This is for custom
@@ -49,7 +43,7 @@ static int staticTypesInitialized = 0;
 static PyTypeObject* addCustomTypeToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
         jclass class, PyTypeObject *type)
 {
-    if (PyDict_SetItemString(fqnToPyType, type->tp_name, (PyObject*) type)) {
+    if (PyDict_SetItemString(fqnToPyType, type->tp_name, (PyObject * ) type)) {
         return NULL;
     }
     /*
@@ -73,7 +67,8 @@ static PyTypeObject* addCustomTypeToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
 static PyTypeObject* addSpecToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
                                        jclass class, PyType_Spec *spec, PyTypeObject *base)
 {
-    PyTypeObject *type = (PyTypeObject*) PyType_FromSpecWithBases(spec, (PyObject*) base);
+    PyTypeObject *type = (PyTypeObject*) PyType_FromSpecWithBases(spec,
+                         (PyObject*) base);
     if (!type) {
         return NULL;
     }
@@ -121,25 +116,22 @@ static int populateCustomTypeDict(JNIEnv *env, PyObject* fqnToPyType)
     if (!addSpecToTypeDict(env, fqnToPyType, JMAP_TYPE, &PyJMap_Spec, NULL)) {
         return -1;
     }
+    JepModuleState* modState = pyembed_get_module_state();
+    if (!modState) {
+        return -1;
+    }
     if (!addSpecToTypeDict(env, fqnToPyType, JNUMBER_TYPE, &PyJNumber_Spec,
-                           &PyJObject_Type)) {
+                           modState->PyJObject_Type)) {
         return -1;
     }
     if (!addSpecToTypeDict(env, fqnToPyType, JBUFFER_TYPE, &PyJBuffer_Spec,
-                           &PyJObject_Type)) {
+                           modState->PyJObject_Type)) {
         return -1;
     }
 
-    if (staticTypesInitialized) {
-        if (PyDict_SetItemString(fqnToPyType, PyJObject_Type.tp_name,
-                                 (PyObject * ) &PyJObject_Type)) {
-            return -1;
-        }
-    } else {
-        if (!addCustomTypeToTypeDict(env, fqnToPyType, JOBJECT_TYPE, &PyJObject_Type)) {
-            return -1;
-        }
-        staticTypesInitialized = 1;
+    if (!addCustomTypeToTypeDict(env, fqnToPyType, JOBJECT_TYPE,
+                                 modState->PyJObject_Type)) {
+        return -1;
     }
     return 0;
 }
@@ -325,7 +317,7 @@ static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
         PyObject* cached = PyDict_GetItem(dict, pymethod->pyMethodName);
         if (cached == NULL) {
             if (PyDict_SetItem(dict, pymethod->pyMethodName,
-                               (PyObject*) pymethod) != 0) {
+                               (PyObject * ) pymethod) != 0) {
                 Py_DECREF(pymethod);
                 return -1;
             }
@@ -380,7 +372,7 @@ static int addFields(JNIEnv* env, PyObject* dict, jclass clazz)
                 return -1;
             }
 
-            if (PyDict_SetItem(dict, pyjfield->pyFieldName, (PyObject*) pyjfield) != 0) {
+            if (PyDict_SetItem(dict, pyjfield->pyFieldName, (PyObject * ) pyjfield) != 0) {
                 return -1;
             }
 
@@ -570,7 +562,7 @@ static PyObject* pyjtype_mro(PyObject* self, PyObject* unused)
                 return NULL;
             }
         }
-        if (merge_mro(((PyTypeObject*) base), mro_list)) {
+        if (merge_mro(((PyTypeObject * ) base), mro_list)) {
             Py_DECREF(mro_list);
             return NULL;
         }
@@ -614,7 +606,8 @@ static PyTypeObject PyJType_Type = {
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_TYPE_SUBCLASS,                 /* tp_flags */
+    Py_TPFLAGS_TYPE_SUBCLASS |
+    Py_TPFLAGS_IMMUTABLETYPE,                 /* tp_flags */
     0,                                        /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */

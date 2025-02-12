@@ -32,7 +32,7 @@
 #define _Included_pyjarray
 
 
-extern PyTypeObject PyJArray_Type;
+extern PyType_Spec PyJArray_Spec;
 
 // c storage for our stuff, managed by python interpreter.
 typedef struct {

@@ -42,6 +42,12 @@ struct __JepThread {
 };
 typedef struct __JepThread JepThread;
 
+struct __JepModuleState {
+    PyTypeObject *PyJObject_Type;
+    PyTypeObject *PyJClass_Type;
+    PyTypeObject *PyJArray_Type;
+};
+typedef struct __JepModuleState JepModuleState;
 
 void pyembed_startup(JNIEnv*, jobjectArray, jint, jint, jstring, jint, jstring,
                      jint, jint, jint, jint, jint);
@@ -68,6 +74,8 @@ jobject pyembed_getvalue(JNIEnv*, intptr_t, char*, jclass);
 JNIEnv* pyembed_get_env(void);
 JepThread* pyembed_get_jepthread(void);
 PyObject* pyembed_get_jep_module(void);
+JepModuleState* pyembed_get_module_state(void);
+
 
 // -------------------------------------------------- set() methods
 
