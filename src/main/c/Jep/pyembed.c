@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2004-2022 JEP AUTHORS.
+   Copyright (c) 2004-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -793,7 +793,6 @@ JepModuleState* pyembed_get_module_state(void)
     } else {
         return NULL;
     }
-
 }
 
 static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
@@ -1468,7 +1467,6 @@ static int maybe_pyc_file(FILE *fp, const char* filename, const char* ext,
     pymodule = NULL;                                                \
     if(module != 0)                                                 \
         pymodule = (PyObject *) module;
-
 
 
 void pyembed_setparameter_object(JNIEnv *env,

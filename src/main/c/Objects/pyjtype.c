@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2020-2022 JEP AUTHORS.
+   Copyright (c) 2020-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -32,7 +32,6 @@ static PyTypeObject PyJType_Type;
 static PyTypeObject* pyjtype_get_cached(JNIEnv*, PyObject*, jclass);
 static int addMethods(JNIEnv*, PyObject*, jclass);
 
-
 /*
  * Populate pyjmethods for a type and add it to the cache. This is for custom
  * types with extra logic in c since we are not able to add pyjmethods before
@@ -43,7 +42,7 @@ static int addMethods(JNIEnv*, PyObject*, jclass);
 static PyTypeObject* addCustomTypeToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
         jclass class, PyTypeObject *type)
 {
-    if (PyDict_SetItemString(fqnToPyType, type->tp_name, (PyObject * ) type)) {
+    if (PyDict_SetItemString(fqnToPyType, type->tp_name, (PyObject*) type)) {
         return NULL;
     }
     /*
@@ -229,7 +228,6 @@ static PyObject* getBaseTypes(JNIEnv *env, PyObject *fqnToPyType, jclass clazz)
 }
 
 
-
 /*
  * Adding empty slots to the type dict to prevent creation of __dict__ for
  * every instance and ensures all attribute access goes through the original
@@ -317,7 +315,7 @@ static int addMethods(JNIEnv* env, PyObject* dict, jclass clazz)
         PyObject* cached = PyDict_GetItem(dict, pymethod->pyMethodName);
         if (cached == NULL) {
             if (PyDict_SetItem(dict, pymethod->pyMethodName,
-                               (PyObject * ) pymethod) != 0) {
+                               (PyObject*) pymethod) != 0) {
                 Py_DECREF(pymethod);
                 return -1;
             }
@@ -372,7 +370,7 @@ static int addFields(JNIEnv* env, PyObject* dict, jclass clazz)
                 return -1;
             }
 
-            if (PyDict_SetItem(dict, pyjfield->pyFieldName, (PyObject * ) pyjfield) != 0) {
+            if (PyDict_SetItem(dict, pyjfield->pyFieldName, (PyObject*) pyjfield) != 0) {
                 return -1;
             }
 
@@ -439,7 +437,7 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
          * See https://docs.python.org/3/library/functions.html#type
          */
         type = (PyTypeObject*) PyObject_CallFunctionObjArgs((PyObject*) &PyJType_Type,
-               shortName, bases, dict, NULL);
+                shortName, bases, dict, NULL);
     }
     Py_DECREF(bases);
     Py_DECREF(dict);
@@ -562,7 +560,7 @@ static PyObject* pyjtype_mro(PyObject* self, PyObject* unused)
                 return NULL;
             }
         }
-        if (merge_mro(((PyTypeObject * ) base), mro_list)) {
+        if (merge_mro(((PyTypeObject*) base), mro_list)) {
             Py_DECREF(mro_list);
             return NULL;
         }
@@ -627,4 +625,3 @@ static PyTypeObject PyJType_Type = {
     0,                                        /* tp_alloc */
     NULL,                                     /* tp_new */
 };
-

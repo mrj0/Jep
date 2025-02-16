@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2004-2022 JEP AUTHORS.
+   Copyright (c) 2004-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -486,7 +486,7 @@ static PyType_Slot slots[] = {
 };
 
 PyType_Spec PyJClass_Spec = {
-    .name = "java.lang.Class",
+    .name = "jep.PyJClass",
     .basicsize = sizeof(PyJClassObject),
     .flags = Py_TPFLAGS_DEFAULT,
     .slots = slots

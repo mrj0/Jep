@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2004-2022 JEP AUTHORS.
+   Copyright (c) 2004-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -75,7 +75,6 @@ JNIEnv* pyembed_get_env(void);
 JepThread* pyembed_get_jepthread(void);
 PyObject* pyembed_get_jep_module(void);
 JepModuleState* pyembed_get_module_state(void);
-
 
 // -------------------------------------------------- set() methods
 

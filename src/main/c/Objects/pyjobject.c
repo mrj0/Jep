@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2004-2022 JEP AUTHORS.
+   Copyright (c) 2004-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -41,7 +41,6 @@ int PyJObject_Check(PyObject *pyobj)
     }
     return 0;
 }
-
 
 PyObject* PyJObject_New(JNIEnv *env, PyTypeObject* type, jobject obj,
                         jclass class)

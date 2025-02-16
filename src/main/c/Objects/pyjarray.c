@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2004-2022 JEP AUTHORS.
+   Copyright (c) 2004-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -643,6 +643,7 @@ void pyjarray_release_pinned(PyJArrayObject *self, jint mode)
     } // switch
 }
 
+
 int pyjarray_check(PyObject *obj)
 {
     JepModuleState* modState = pyembed_get_module_state();
@@ -862,9 +863,7 @@ static PyObject* pyjarray_item(PyJArrayObject *self, Py_ssize_t pos)
     case JSTRING_ID: {
         jstring     jstr;
 
-        jstr = (jstring) (*env)->GetObjectArrayElement(env,
-               self->object,
-               (jsize) pos);
+        jstr = (jstring) (*env)->GetObjectArrayElement(env, self->object, (jsize) pos);
 
         if (process_java_exception(env))
             ;
@@ -884,9 +883,8 @@ static PyObject* pyjarray_item(PyJArrayObject *self, Py_ssize_t pos)
     case JARRAY_ID: {
         jobjectArray obj;
 
-        obj = (jobjectArray) (*env)->GetObjectArrayElement(env,
-              self->object,
-              (jsize) pos);
+        obj = (jobjectArray) (*env)->GetObjectArrayElement(env, self->object,
+                (jsize) pos);
 
         if (process_java_exception(env))
             ;
@@ -1559,8 +1557,7 @@ static PyObject* pyjarray_subscript(PyJArrayObject *self, PyObject *item)
     } else if (PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
         if (PySlice_GetIndicesEx(item, pyjarray_length((PyObject * ) self), &start,
-                                 &stop,
-                                 &step, &slicelength) < 0) {
+                                 &stop, &step, &slicelength) < 0) {
             // error will already be set
             return NULL;
         }
