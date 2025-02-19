@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016-2022 JEP AUTHORS.
+   Copyright (c) 2016-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -340,7 +340,8 @@ PyTypeObject PyJConstructor_Type = {
     0,                                        /* tp_getattro */
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
+    Py_TPFLAGS_DEFAULT |
+    Py_TPFLAGS_IMMUTABLETYPE,                 /* tp_flags */
     "jconstructor",                           /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */

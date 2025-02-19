@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2020-2022 JEP AUTHORS.
+   Copyright (c) 2020-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -31,13 +31,6 @@ static PyTypeObject PyJType_Type;
 
 static PyTypeObject* pyjtype_get_cached(JNIEnv*, PyObject*, jclass);
 static int addMethods(JNIEnv*, PyObject*, jclass);
-
-/*
-* Flag to indicate if methods have been added to static types. Most types are
-* reinitialized for each interpreter but static types are shared between
-* interpreters and must be initialized only once.
-*/
-static int staticTypesInitialized = 0;
 
 /*
  * Populate pyjmethods for a type and add it to the cache. This is for custom
@@ -73,7 +66,8 @@ static PyTypeObject* addCustomTypeToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
 static PyTypeObject* addSpecToTypeDict(JNIEnv *env, PyObject* fqnToPyType,
                                        jclass class, PyType_Spec *spec, PyTypeObject *base)
 {
-    PyTypeObject *type = (PyTypeObject*) PyType_FromSpecWithBases(spec, (PyObject*) base);
+    PyTypeObject *type = (PyTypeObject*) PyType_FromSpecWithBases(spec,
+                         (PyObject*) base);
     if (!type) {
         return NULL;
     }
@@ -121,25 +115,22 @@ static int populateCustomTypeDict(JNIEnv *env, PyObject* fqnToPyType)
     if (!addSpecToTypeDict(env, fqnToPyType, JMAP_TYPE, &PyJMap_Spec, NULL)) {
         return -1;
     }
+    JepModuleState* modState = pyembed_get_module_state();
+    if (!modState) {
+        return -1;
+    }
     if (!addSpecToTypeDict(env, fqnToPyType, JNUMBER_TYPE, &PyJNumber_Spec,
-                           &PyJObject_Type)) {
+                           modState->PyJObject_Type)) {
         return -1;
     }
     if (!addSpecToTypeDict(env, fqnToPyType, JBUFFER_TYPE, &PyJBuffer_Spec,
-                           &PyJObject_Type)) {
+                           modState->PyJObject_Type)) {
         return -1;
     }
 
-    if (staticTypesInitialized) {
-        if (PyDict_SetItemString(fqnToPyType, PyJObject_Type.tp_name,
-                                 (PyObject * ) &PyJObject_Type)) {
-            return -1;
-        }
-    } else {
-        if (!addCustomTypeToTypeDict(env, fqnToPyType, JOBJECT_TYPE, &PyJObject_Type)) {
-            return -1;
-        }
-        staticTypesInitialized = 1;
+    if (!addCustomTypeToTypeDict(env, fqnToPyType, JOBJECT_TYPE,
+                                 modState->PyJObject_Type)) {
+        return -1;
     }
     return 0;
 }
@@ -235,7 +226,6 @@ static PyObject* getBaseTypes(JNIEnv *env, PyObject *fqnToPyType, jclass clazz)
     (*env)->DeleteLocalRef(env, interfaces);
     return bases;
 }
-
 
 
 /*
@@ -447,7 +437,7 @@ static PyTypeObject* pyjtype_get_new(JNIEnv *env, PyObject *fqnToPyType,
          * See https://docs.python.org/3/library/functions.html#type
          */
         type = (PyTypeObject*) PyObject_CallFunctionObjArgs((PyObject*) &PyJType_Type,
-               shortName, bases, dict, NULL);
+                shortName, bases, dict, NULL);
     }
     Py_DECREF(bases);
     Py_DECREF(dict);
@@ -614,7 +604,8 @@ static PyTypeObject PyJType_Type = {
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT |
-    Py_TPFLAGS_TYPE_SUBCLASS,                 /* tp_flags */
+    Py_TPFLAGS_TYPE_SUBCLASS |
+    Py_TPFLAGS_IMMUTABLETYPE,                 /* tp_flags */
     0,                                        /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
@@ -634,4 +625,3 @@ static PyTypeObject PyJType_Type = {
     0,                                        /* tp_alloc */
     NULL,                                     /* tp_new */
 };
-

@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2004-2022 JEP AUTHORS.
+   Copyright (c) 2004-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -157,17 +157,54 @@ static struct PyMethodDef jep_methods[] = {
 
     { NULL, NULL }
 };
+
+static void free_jep_module(PyObject* modjep)
+{
+    JepModuleState* modState = (JepModuleState*) PyModule_GetState(modjep);
+    if (modState) {
+        Py_CLEAR(modState->PyJObject_Type);
+        Py_CLEAR(modState->PyJClass_Type);
+        Py_CLEAR(modState->PyJArray_Type);
+    }
+}
+
 static struct PyModuleDef jep_module_def = {
     PyModuleDef_HEAD_INIT,
-    "_jep",              /* m_name */
-    "_jep",              /* m_doc */
-    0,                   /* m_size */
-    jep_methods,         /* m_methods */
-    NULL,                /* m_reload */
-    NULL,                /* m_traverse */
-    NULL,                /* m_clear */
-    NULL,                /* m_free */
+    "_jep",                     /* m_name */
+    "_jep",                     /* m_doc */
+    sizeof(JepModuleState),     /* m_size */
+    jep_methods,                /* m_methods */
+    NULL,                       /* m_reload */
+    NULL,                       /* m_traverse */
+    NULL,                       /* m_clear */
+    (freefunc) free_jep_module, /* m_free */
 };
+
+static int pyjtypes_ready(PyObject *modjep)
+{
+    JepModuleState* modState = (JepModuleState*) PyModule_GetState(modjep);
+    if (!modState) {
+        return -1;
+    }
+    modState->PyJObject_Type = (PyTypeObject*) PyType_FromSpec(&PyJObject_Spec);
+    if (!modState->PyJObject_Type) {
+        return -1;
+    }
+    modState->PyJClass_Type = (PyTypeObject*) PyType_FromSpecWithBases(
+                                  &PyJClass_Spec, (PyObject*) modState->PyJObject_Type);
+    if (!modState->PyJClass_Type) {
+        Py_CLEAR(modState->PyJObject_Type);
+        return -1;
+    }
+    modState->PyJArray_Type = (PyTypeObject*) PyType_FromSpecWithBases(
+                                  &PyJArray_Spec, (PyObject*) modState->PyJObject_Type);
+    if (!modState->PyJArray_Type) {
+        Py_CLEAR(modState->PyJObject_Type);
+        Py_CLEAR(modState->PyJClass_Type);
+        return -1;
+    }
+    return 0;
+}
 
 /*
  * Initialize the _jep module.
@@ -220,6 +257,12 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
             Py_INCREF(mainThreadModulesLock);
             PyModule_AddObject(modjep, "mainInterpreterModulesLock", mainThreadModulesLock);
         }
+        if (pyjtypes_ready(modjep)) {
+            Py_DECREF(modjep);
+            handle_startup_exception(env, "Failed to initialize PyJTypes");
+            return -1;
+        }
+
         /* still held by sys.modules. */
         Py_DECREF(modjep);
 #if JEP_NUMPY_ENABLED
@@ -227,29 +270,6 @@ static int initjep(JNIEnv *env, jboolean hasSharedModules)
             return -1;
         }
 #endif
-    }
-    return 0;
-}
-
-/*
- * MSVC requires tp_base to be set at runtime instead of in the type
- * declaration. :/  Otherwise we could just set tp_base in the type declaration
- * and be done with it.  Since we are building an inheritance tree of types, we
- * need to ensure that all the tp_base are set for the subtypes before we
- * possibly use those subtypes.
- *
- * See https://docs.python.org/3/extending/newtypes.html
- */
-static int pyjtypes_ready(void)
-{
-    if (PyType_Ready(&PyJObject_Type) < 0) {
-        return -1;
-    }
-    if (!PyJClass_Type.tp_base) {
-        PyJClass_Type.tp_base = &PyJObject_Type;
-    }
-    if (PyType_Ready(&PyJClass_Type) < 0) {
-        return -1;
     }
     return 0;
 }
@@ -411,11 +431,6 @@ void pyembed_startup(JNIEnv *env,
             (*env)->ThrowNew(env, excClass, status.err_msg);
         }
         // The exit code is ignored, because exiting seems rude.
-        return;
-    }
-
-    if (pyjtypes_ready()) {
-        handle_startup_exception(env, "Failed to initialize PyJTypes");
         return;
     }
 
@@ -768,6 +783,16 @@ PyObject* pyembed_get_jep_module(void)
         PyErr_SetString(PyExc_ModuleNotFoundError, "Module _jep was not found.");
     }
     return modjep;
+}
+
+JepModuleState* pyembed_get_module_state(void)
+{
+    PyObject* modjep = pyembed_get_jep_module();
+    if (modjep) {
+        return (JepModuleState*) PyModule_GetState(modjep);
+    } else {
+        return NULL;
+    }
 }
 
 static PyObject* pyembed_jproxy(PyObject *self, PyObject *args)
@@ -1442,7 +1467,6 @@ static int maybe_pyc_file(FILE *fp, const char* filename, const char* ext,
     pymodule = NULL;                                                \
     if(module != 0)                                                 \
         pymodule = (PyObject *) module;
-
 
 
 void pyembed_setparameter_object(JNIEnv *env,

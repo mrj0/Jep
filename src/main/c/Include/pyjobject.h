@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2004-2022 JEP AUTHORS.
+   Copyright (c) 2004-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -31,7 +31,7 @@
 #define _Included_pyjobject
 
 
-extern PyTypeObject PyJObject_Type;
+extern PyType_Spec PyJObject_Spec;
 
 /*
  * The common fields for PyJObject. The usage of this macro is similar to
@@ -59,8 +59,7 @@ typedef struct {
  */
 PyObject* PyJObject_New(JNIEnv*, PyTypeObject*, jobject, jclass);
 
-#define PyJObject_Check(pyobj) \
-    PyObject_TypeCheck(pyobj, &PyJObject_Type)
+int PyJObject_Check(PyObject*);
 
 
 #endif // ndef pyjobject
