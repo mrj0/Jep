@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-2024 JEP AUTHORS.
+ * Copyright (c) 2016-2025 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -48,6 +48,8 @@ import java.util.Arrays;
  */
 public class PyConfig {
 
+    protected final boolean isolated;
+
     /*
      * -1 is used to indicate not set, in which case we will not set it in the
      * native code and the setting will be Python's default. A value of 0 or
@@ -64,6 +66,8 @@ public class PyConfig {
 
     protected int optimizationLevel = -1;
 
+    protected int parseArgv = -1;
+
     protected String programName;
 
     protected int siteImport = -1;
@@ -75,6 +79,18 @@ public class PyConfig {
     protected int verbose = -1;
 
     protected int writeBytecode = -1;
+
+    /**
+     * @deprecated Use {@link #python()} or {@link #isolated} instead.
+     */
+    @Deprecated
+    public PyConfig() {
+        this(false);
+    }
+
+    protected PyConfig(boolean isolated) {
+        this.isolated = isolated;
+    }
 
     /**
      * Set sys.argv for {@link SharedInterpreter}s and shared modules used by
@@ -148,6 +164,21 @@ public class PyConfig {
      */
     public PyConfig setOptimizationLevel(int optimizationLevel) {
         this.optimizationLevel = optimizationLevel;
+        return this;
+    }
+
+    /**
+     * If true, parse argv the same way the regular Python parses command line
+     * arguments, and strip Python arguments from argv.
+     * 
+     * @param parseArgv
+     *            a boolean to indicate whether python should parse command line
+     *            arguments
+     * @return a reference to this PyConfig
+     * @see https://docs.python.org/3/c-api/init_config.html#c.PyConfig.parse_argv
+     */
+    public PyConfig setParseArgv(boolean parseArgv) {
+        this.parseArgv = parseArgv ? 1 : 0;
         return this;
     }
 
@@ -370,15 +401,36 @@ public class PyConfig {
         return this.setHome(pythonHome);
     }
 
+    /**
+     * Create a new PyConfig with the default settings to behave as the regular
+     * Python.
+     * 
+     * @see https://docs.python.org/3/c-api/init_config.html#python-configuration
+     */
+    public static PyConfig python() {
+        return new PyConfig(false);
+    }
+
+    /**
+     * Create a new PyConfig with the default settings to isolate python from
+     * the rest of the system.
+     * 
+     * @see https://docs.python.org/3/c-api/init_config.html#isolated-configuration
+     */
+    public static PyConfig isolated() {
+        return new PyConfig(true);
+    }
+
     @Override
     public String toString() {
-        return "PyConfig [argv=" + Arrays.toString(argv) + ", hashSeed="
-                + hashSeed + ", useHashSeed=" + useHashSeed + ", home=" + home
-                + ", optimizationLevel=" + optimizationLevel + ", programName="
-                + programName + ", siteImport=" + siteImport
-                + ", useEnvironment=" + useEnvironment + ", userSiteDirectory="
-                + userSiteDirectory + ", verbose=" + verbose
-                + ", writeBytecode=" + writeBytecode + "]";
+        return "PyConfig [isolated=" + isolated + ", argv="
+                + Arrays.toString(argv) + ", hashSeed=" + hashSeed
+                + ", useHashSeed=" + useHashSeed + ", home=" + home
+                + ", optimizationLevel=" + optimizationLevel + ", parseArgv="
+                + parseArgv + ", programName=" + programName + ", siteImport="
+                + siteImport + ", useEnvironment=" + useEnvironment
+                + ", userSiteDirectory=" + userSiteDirectory + ", verbose="
+                + verbose + ", writeBytecode=" + writeBytecode + "]";
     }
 
 }

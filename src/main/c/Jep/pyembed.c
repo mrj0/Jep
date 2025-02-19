@@ -287,11 +287,13 @@ static void handle_startup_exception(JNIEnv *env, const char* excMsg)
 
 
 void pyembed_startup(JNIEnv *env,
+                     jboolean isolated,
                      jobjectArray argv,
                      jint hashSeed,
                      jint useHashSeed,
                      jstring home,
                      jint optimizationLevel,
+                     jint parseArgv,
                      jstring programName,
                      jint siteImport,
                      jint useEnvironment,
@@ -356,9 +358,15 @@ void pyembed_startup(JNIEnv *env,
 
     PyStatus status = PyStatus_Ok();
     PyConfig config;
-    PyConfig_InitPythonConfig(&config);
+    if (isolated) {
+        PyConfig_InitIsolatedConfig(&config);
+    } else {
+        PyConfig_InitPythonConfig(&config);
+    }
     // According to PEP-587 the fields shared with PyPreConfig should be set first.
-    config.parse_argv = 0;
+    if (parseArgv >= 0) {
+        config.parse_argv = 0;
+    }
     if (useEnvironment >= 0) {
         config.use_environment = useEnvironment;
     }

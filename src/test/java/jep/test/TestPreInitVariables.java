@@ -25,7 +25,7 @@ import jep.SharedInterpreter;
 public class TestPreInitVariables {
 
     public static void main(String[] args) throws JepException {
-        PyConfig pyConfig = new PyConfig();
+        PyConfig pyConfig = PyConfig.python();
         // pyConfig.setIgnoreEnvironmentFlag(1);
         // TODO fix test so no site flag can be tested
         // pyConfig.setNoSiteFlag(1);

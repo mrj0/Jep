@@ -24,7 +24,8 @@ public class TestSharedArgv {
     public static void main(String[] args) throws JepException {
 
         final String[] argv = new String[] { "", "-h", "other" };
-        MainInterpreter.setInitParams(new PyConfig().setArgv(argv));
+        MainInterpreter.setInitParams(
+                PyConfig.python().setArgv(argv).setParseArgv(false));
         JepConfig cfg = new JepConfig();
         cfg.addSharedModules("logging");
         cfg.addIncludePaths(".");
