@@ -365,7 +365,7 @@ void pyembed_startup(JNIEnv *env,
     }
     // According to PEP-587 the fields shared with PyPreConfig should be set first.
     if (parseArgv >= 0) {
-        config.parse_argv = 0;
+        config.parse_argv = parseArgv;
     }
     if (useEnvironment >= 0) {
         config.use_environment = useEnvironment;
