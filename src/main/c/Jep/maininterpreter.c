@@ -1,7 +1,7 @@
 /*
    jep - Java Embedded Python
 
-   Copyright (c) 2016-2022 JEP AUTHORS.
+   Copyright (c) 2016-2025 JEP AUTHORS.
 
    This file is licensed under the the zlib/libpng License.
 
@@ -35,16 +35,18 @@
 /*
  * Class:     jep_MainInterpreter
  * Method:    initializePython
- * Signature: ([Ljava/lang/String;IILjava/lang/String;ILjava/lang/String;IIIII)V
+ * Signature: (Z[Ljava/lang/String;IILjava/lang/String;IILjava/lang/String;IIIII)V
  */
 JNIEXPORT void JNICALL Java_jep_MainInterpreter_initializePython
 (JNIEnv *env,
  jclass class,
+ jboolean isolated,
  jobjectArray argv,
  jint hashSeed,
  jint useHashSeed,
  jstring home,
  jint optimizationLevel,
+ jint parseArgv,
  jstring programName,
  jint siteImport,
  jint useEnvironment,
@@ -53,9 +55,9 @@ JNIEXPORT void JNICALL Java_jep_MainInterpreter_initializePython
  jint writeByteCode
 )
 {
-    pyembed_startup(env, argv, hashSeed, useHashSeed, home, optimizationLevel,
-                    programName, siteImport, useEnvironment, userSiteDirectory, verbose,
-                    writeByteCode);
+    pyembed_startup(env, isolated, argv, hashSeed, useHashSeed, home,
+                    optimizationLevel, parseArgv, programName, siteImport, useEnvironment,
+                    userSiteDirectory, verbose, writeByteCode);
 }
 
 /*

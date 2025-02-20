@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-2022 JEP AUTHORS.
+ * Copyright (c) 2015-2025 JEP AUTHORS.
  *
  * This file is licensed under the the zlib/libpng License.
  *
@@ -135,10 +135,11 @@ public final class MainInterpreter implements AutoCloseable {
         }
 
         if (pyConfig == null) {
-            pyConfig = new PyConfig();
+            pyConfig = PyConfig.python();
         }
         if (sharedModulesArgv != null) {
             pyConfig.setArgv(sharedModulesArgv);
+            pyConfig.setParseArgv(false);
         }
 
         thread = new Thread("JepMainInterpreter") {
@@ -146,9 +147,10 @@ public final class MainInterpreter implements AutoCloseable {
             @Override
             public void run() {
                 try {
-                    initializePython(pyConfig.argv, pyConfig.hashSeed,
-                            pyConfig.useHashSeed, pyConfig.home,
-                            pyConfig.optimizationLevel, pyConfig.programName,
+                    initializePython(pyConfig.isolated, pyConfig.argv,
+                            pyConfig.hashSeed, pyConfig.useHashSeed,
+                            pyConfig.home, pyConfig.optimizationLevel,
+                            pyConfig.parseArgv, pyConfig.programName,
                             pyConfig.siteImport, pyConfig.useEnvironment,
                             pyConfig.userSiteDirectory, pyConfig.verbose,
                             pyConfig.writeBytecode);
@@ -299,10 +301,11 @@ public final class MainInterpreter implements AutoCloseable {
         jepLibraryPath = path;
     }
 
-    private static native void initializePython(String[] argv, int hashSeed,
-            int useHashSeed, String home, int optimizationLevel,
-            String programName, int siteImport, int useEnvironment,
-            int userSiteDirectory, int verbose, int writeBytecode);
+    private static native void initializePython(boolean isolated, String[] argv,
+            int hashSeed, int useHashSeed, String home, int optimizationLevel,
+            int parseArgv, String programName, int siteImport,
+            int useEnvironment, int userSiteDirectory, int verbose,
+            int writeBytecode);
 
     private static native void sharedImportInternal(String module)
             throws JepException;
