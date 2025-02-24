@@ -49,8 +49,8 @@ struct __JepModuleState {
 };
 typedef struct __JepModuleState JepModuleState;
 
-void pyembed_startup(JNIEnv*, jobjectArray, jint, jint, jstring, jint, jstring,
-                     jint, jint, jint, jint, jint);
+void pyembed_startup(JNIEnv*, jboolean, jobjectArray, jint, jint, jstring, jint,
+                     jint, jstring, jint, jint, jint, jint, jint);
 void pyembed_shutdown(JavaVM*);
 void pyembed_shared_import(JNIEnv*, jstring);
 
